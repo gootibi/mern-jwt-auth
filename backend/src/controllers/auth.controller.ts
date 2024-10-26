@@ -1,11 +1,11 @@
 import { CREATED, OK, UNAUTHORIZED } from "../constants/http";
 import SessionModel from "../models/session.model";
-import { createAccount, loginUser, refreshUserAccessToken } from "../services/auth.service";
+import { createAccount, loginUser, refreshUserAccessToken, verifyEmail } from "../services/auth.service";
 import appAssert from "../utils/appAssert";
 import catchError from "../utils/catchError";
 import { clearAuthCookies, getAccessTokenCookieOptions, getRefreshTokenCookieOptions, setAuthCookies } from "../utils/cookies";
 import { verifyToken } from "../utils/jwt";
-import { loginSchema, registerSchema } from "./auth.schemas";
+import { loginSchema, registerSchema, verificationCodeSchema } from "./auth.schemas";
 
 export const registerHandler = catchError(async (req, res) => {
     // validate the request
@@ -75,4 +75,17 @@ export const refreshHandler = catchError(async (req, res) => {
         .json({
             message: "Access token refreshed",
         });
+});
+
+
+export const verifyEmailHandler = catchError(async (req, res) => {
+    // validate the request
+    const verificationCode = verificationCodeSchema.parse(req.params.code);
+
+    // call service
+    await verifyEmail(verificationCode);
+
+    return res.status(OK).json({
+        message: "Email was successfully verified",
+    });
 });
