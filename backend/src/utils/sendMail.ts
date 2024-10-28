@@ -16,8 +16,10 @@ const getToEmail = (to: string) =>
 
 export const sendMail = async ({ to, subject, text, html }: Params) =>
     await resend.emails.send({
-        from: getFromEmail(),
-        to: getToEmail(to),
+        // from: getFromEmail(),
+        from: "onboarding@resend.dev",
+        // to: getToEmail(to),
+        to: "delivered@resend.dev",
         subject,
         text,
         html
