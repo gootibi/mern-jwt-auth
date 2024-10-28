@@ -1,11 +1,11 @@
 import { CREATED, OK, UNAUTHORIZED } from "../constants/http";
 import SessionModel from "../models/session.model";
-import { createAccount, loginUser, refreshUserAccessToken, verifyEmail } from "../services/auth.service";
+import { createAccount, loginUser, refreshUserAccessToken, resetPassword, sendPasswordResetEmail, verifyEmail } from "../services/auth.service";
 import appAssert from "../utils/appAssert";
 import catchError from "../utils/catchError";
 import { clearAuthCookies, getAccessTokenCookieOptions, getRefreshTokenCookieOptions, setAuthCookies } from "../utils/cookies";
 import { verifyToken } from "../utils/jwt";
-import { loginSchema, registerSchema, verificationCodeSchema } from "./auth.schemas";
+import { emailSchema, loginSchema, registerSchema, resetPassworSchema, verificationCodeSchema } from "./auth.schemas";
 
 export const registerHandler = catchError(async (req, res) => {
     // validate the request
@@ -88,4 +88,30 @@ export const verifyEmailHandler = catchError(async (req, res) => {
     return res.status(OK).json({
         message: "Email was successfully verified",
     });
+});
+
+export const sendPasswordResetHandler = catchError(async (req, res) => {
+    // grab the email
+    const email = emailSchema.parse(req.body.email);
+
+    // call service
+    await sendPasswordResetEmail(email);
+
+    return res.status(OK).json({
+        message: "Password reset email sent",
+    });
+
+});
+
+export const resetPasswordHandler = catchError(async (req, res) => {
+    const request = resetPassworSchema.parse(req.body);
+
+    // call service
+    await resetPassword(request);
+
+    return clearAuthCookies(res)
+        .status(OK)
+        .json({
+            message: "Password reset successful"
+        });
 });
