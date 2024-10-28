@@ -7,6 +7,8 @@ import { APP_ORIGIN, NODE_ENV, PORT } from "./constants/env";
 import { OK } from "./constants/http";
 import errorHandler from "./middleware/errorHandler";
 import authRoutes from "./routes/auth.route";
+import authenticate from "./middleware/authenticate";
+import userRoutes from "./routes/user.route";
 
 const app: Application = express();
 
@@ -26,7 +28,11 @@ app.get("/health", (req, res, next) => {
     });
 });
 
+// auth routes
 app.use("/auth", authRoutes);
+
+// protected routes
+app.use("/user", authenticate, userRoutes);
 
 app.use(errorHandler);
 
