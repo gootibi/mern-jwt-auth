@@ -199,42 +199,48 @@ export const verifyEmail = async (code: string) => {
 };
 
 export const sendPasswordResetEmail = async (email: string) => {
-    // get the user by email
-    const user = await UserModel.findOne({ email: email });
-    appAssert(user, NOT_FOUND, "User not found");
+    try {
+        // get the user by email
+        const user = await UserModel.findOne({ email: email });
+        appAssert(user, NOT_FOUND, "User not found");
 
-    // check email rate limit
-    const fiveMinAgo = fiveMinutesAgo();
-    const count = await VerificationCodeModel.countDocuments({
-        userId: user._id,
-        type: VerificationCodeType.PasswordReset,
-        createdAt: { $gt: fiveMinAgo }
-    });
+        // check email rate limit
+        const fiveMinAgo = fiveMinutesAgo();
+        const count = await VerificationCodeModel.countDocuments({
+            userId: user._id,
+            type: VerificationCodeType.PasswordReset,
+            createdAt: { $gt: fiveMinAgo }
+        });
 
-    appAssert(count <= 1, TO_MANY_REQUESTS, "Too many requests, please try again later");
+        appAssert(count <= 1, TO_MANY_REQUESTS, "Too many requests, please try again later");
 
-    // create verification code 
-    const expiresAt = oneHourFromNow();
+        // create verification code 
+        const expiresAt = oneHourFromNow();
 
-    const verificationCode = await VerificationCodeModel.create({
-        userId: user._id,
-        type: VerificationCodeType.PasswordReset,
-        expiresAt,
-    });
+        const verificationCode = await VerificationCodeModel.create({
+            userId: user._id,
+            type: VerificationCodeType.PasswordReset,
+            expiresAt,
+        });
 
-    // send verification email
-    const url = `${APP_ORIGIN}/password/reset?code=${verificationCode._id}&exp=${expiresAt.getTime()}`
+        // send verification email
+        const url = `${APP_ORIGIN}/password/reset?code=${verificationCode._id}&exp=${expiresAt.getTime()}`
 
-    const { data, error } = await sendMail({
-        to: user.email,
-        ...getPasswordResetTemplate(url),
-    });
-    appAssert(data?.id, INTERNAL_SERVER_ERROR, `${error?.name} - ${error?.message}`)
+        const { data, error } = await sendMail({
+            to: user.email,
+            ...getPasswordResetTemplate(url),
+        });
+        appAssert(data?.id, INTERNAL_SERVER_ERROR, `${error?.name} - ${error?.message}`)
 
-    // return success
-    return {
-        url,
-        emailId: data.id,
+        // return success
+        return {
+            url,
+            emailId: data.id,
+        }
+
+    } catch (error: any) {
+        console.log("sendPasswordResetError:", error.message);
+        return {};
     }
 };
 
