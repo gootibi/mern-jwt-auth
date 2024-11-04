@@ -2,19 +2,22 @@ import { Box, Button, Link as ChakraLink, Container, Flex, FormControl, FormLabe
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login } from "../lib/api";
+import { register } from "../lib/api";
 
-const Login = () => {
+const Register = () => {
+
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
 
     const {
-        mutate: signIn,
+        mutate: createAccount,
         isPending,
-        isError
+        isError,
+        error
     } = useMutation({
-        mutationFn: login,
+        mutationFn: register,
         onSuccess: () => {
             navigate('/', {
                 replace: true,
@@ -26,15 +29,21 @@ const Login = () => {
         <Flex minH="100vh" align="center" justify="center" >
             <Container mx="auto" maxW="md" py={12} px={6} textAlign="center">
                 <Heading fontSize="4xl" mb={8}>
-                    Sign into your account
+                    Create an account
                 </Heading>
                 <Box rounded="lg" bg="gray.700" boxShadow="lg" p={8} >
                     {
-                        isError && (<Box mb={3} color="red.400">
-                            Invalid email or password
-                        </Box>)
+                        isError && (
+                            <Box mb={3} color="red.400">
+                                {
+                                    error?.message || "An error occurred"
+                                }
+                            </Box>
+                        )
                     }
+
                     <Stack spacing={4}>
+                        
                         <FormControl id="email">
                             <FormLabel>Email address</FormLabel>
                             <Input
@@ -50,36 +59,44 @@ const Login = () => {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                            />
+                            <Text color="text.muted" fontSize="xs" textAlign="left" mt={2} >
+                                - Must be at least 6 characters long.
+                            </Text>
+                        </FormControl>
+                        <FormControl id="confirmPassword">
+                            <FormLabel>Confirm Password</FormLabel>
+                            <Input
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
                                 onKeyDown={
-                                    (e) => e.key === 'Enter' && signIn({ email, password })
+                                    (e) => e.key === 'Enter' && createAccount({ email, password, confirmPassword })
                                 }
                             />
                         </FormControl>
 
-                        <ChakraLink as={Link} to="/password/forgot" fontSize="sm" textAlign={{
-                            base: 'center',
-                            sm: 'right'
-                        }}>
-                            Forgot password?
-                        </ChakraLink>
                         <Button my={2}
-                            isDisabled={!email || password.length < 6}
+                            isDisabled={!email || password.length < 6 || password !== confirmPassword}
                             isLoading={isPending}
-                            onClick={() => signIn({ email, password })}
+                            onClick={() => createAccount({ email, password, confirmPassword })}
                         >
-                            Sign in
+                            Create Account
                         </Button>
+
                         <Text align='center' fontSize='sm' color='text.muted'>
-                            Don&apos;t have an account?{" "}
-                            <ChakraLink as={Link} to='/register'>
-                                Sign up
+                            Already have an account?{" "}
+                            <ChakraLink as={Link} to='/login'>
+                                Sign in
                             </ChakraLink>
                         </Text>
+
                     </Stack>
+
                 </Box>
             </Container>
         </Flex>
     )
 }
 
-export default Login
+export default Register
